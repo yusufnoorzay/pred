@@ -1,0 +1,246 @@
+-- varity source @ xeno#0666
+if not LPH_OBFUSCATED then
+    LPH_JIT_MAX = function(...) return(...) end;
+    LPH_NO_VIRTUALIZE = function(...) return(...) end;
+end
+
+
+getgenv().Varity = {
+    SilentAim = false,
+    HotKey = "B",
+    Prediction = 0.125,
+    Resolver = false,
+}
+
+-- // silent aim //
+
+local xeno = loadstring(game:HttpGet("https://pastebin.com/raw/9v53uUtD"))()
+
+
+xeno.TeamCheck(false)
+
+local ws = game:GetService("Workspace") -- // just define once to cache it since luaGuard encryptes workspace. This should make it faster
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+local CurrentCamera = ws.CurrentCamera
+
+getgenv().Varity = Varity
+
+Mouse.KeyDown:Connect(function(key)
+    if (key == getgenv().Varity.HotKey) then
+            if getgenv().xeno.Enabled == true then
+                getgenv().xeno.Enabled = false
+            else
+                getgenv().xeno.Enabled = true
+            end
+        end
+    end)
+
+function xeno.Check()
+    if not (xeno.Enabled == true and xeno.Selected ~= LocalPlayer and xeno.SelectedPart ~= nil) then
+        return false
+    end
+    local Character = xeno.Character(xeno.Selected)
+    local KOd = Character:WaitForChild("BodyEffects")["K.O"].Value
+    local Grabbed = Character:FindFirstChild("GRABBING_CONSTRAINT") ~= nil
+    if (KOd or Grabbed) then
+        return false
+    end
+    return true
+end
+
+LPH_JIT_MAX(function() -- limits the level of obfuscation to make loops faster
+    task.spawn(function()
+        while task.wait() do
+            if Varity.Resolver and xeno.Selected ~= nil and (xeno.Selected.Character)  then
+                local oldVel = game.Players[xeno.Selected.Name].Character.HumanoidRootPart.Velocity
+                game.Players[xeno.Selected.Name].Character.HumanoidRootPart.Velocity = Vector3.new(oldVel.X, -0, oldVel.Z)
+            end 
+        end
+    end)
+end)() -- end of lph_jit_max macro - also calls it important you add the () at the end to call it
+
+local Script = {Functions = {}}
+
+Script.Functions.getToolName = function(name)
+    local split = string.split(string.split(name, "[")[2], "]")[1]
+    return split
+end
+
+Script.Functions.getEquippedWeaponName = function(player)
+   if (player) and player:FindFirstChildWhichIsA("Tool") then
+      local Tool =  player:FindFirstChildWhichIsA("Tool")
+      if string.find(Tool.Name, "%[") and string.find(Tool.Name, "%]") and not string.find(Tool.Name, "Wallet") and not string.find(Tool.Name, "Phone") then 
+         return Script.Functions.getToolName(Tool.Name)
+      end
+   end
+   return nil
+end
+
+LPH_JIT_MAX(function() -- limits the level of obfuscation to make loops faster
+    game:GetService("RunService").RenderStepped:Connect(function()
+        if Script.Functions.getEquippedWeaponName(game.Players.LocalPlayer) ~= nil then
+            local WeaponSettings = GunSettings[Script.Functions.getEquippedWeaponName(ws.Players[LocalPlayer.Name])]
+            if WeaponSettings ~= nil then
+                xeno.FOV = WeaponSettings.FOV
+            else
+                xeno.FOV = 10
+            end
+        end    
+    end)
+end)() -- end of lph_jit_max macro - also calls it important you add the () at the end to call it
+
+
+LPH_NO_VIRTUALIZE(function() 
+    local index
+index = hookmetamethod(game, "__index", function(t, k)
+    if (t:IsA("Mouse") and (k == "Hit" or k == "Target") and xeno.Check()) then
+        local SelectedPart = xeno.SelectedPart
+        if (Varity.SilentAim and (k == "Hit" or k == "Target")) then
+            local Hit = SelectedPart.CFrame + (SelectedPart.Velocity * Varity.Prediction)
+            return (k == "Hit" and Hit or SelectedPart)
+        end
+    end
+
+    return index(t, k)
+end)
+ end)();
+
+ -- // macro //
+
+ getgenv().MacroKeybind = "q"
+
+local Player = game:GetService("Players").LocalPlayer
+local Mouse = Player:GetMouse()
+local SpeedGlitch = false
+Mouse.KeyDown:Connect(
+    function(Key)
+        if Key == getgenv().MacroKeybind then
+            SpeedGlitch = not SpeedGlitch
+            if SpeedGlitch == true then
+                repeat
+                    game:GetService("RunService").Heartbeat:wait()
+                    keypress(0x49)
+                    game:GetService("RunService").Heartbeat:wait()
+                    keypress(0x4F)
+                    game:GetService("RunService").Heartbeat:wait()
+                    keyrelease(0x49)
+                    game:GetService("RunService").Heartbeat:wait()
+                    keyrelease(0x4F)
+                    game:GetService("RunService").Heartbeat:wait()
+                until SpeedGlitch == false
+            end
+        end
+    end
+)
+ 
+-- // tracer //
+
+local CC = ws.CurrentCamera
+local Mouse = game.Players.LocalPlayer:GetMouse()
+local Plr
+
+
+Mouse.KeyDown:Connect(function(Key)
+    local Keybind = getgenv().Settings.Key:lower()
+    if (Key == Keybind) then
+        if getgenv().Settings.Enabled == true then
+            IsTargetting = not IsTargetting
+            if IsTargetting then
+                Plr = GetClosest()
+            else
+                if Plr ~= nil then
+                    Plr = nil
+                end
+            end
+        end
+    end
+end)
+
+function GetClosest()
+    local closestPlayer
+    local shortestDistance = math.huge
+    LPH_JIT_MAX(function()
+        for i, v in pairs(game.Players:GetPlayers()) do
+            pcall(function()
+                if v ~= game.Players.LocalPlayer and v.Character and
+                    v.Character:FindFirstChild("Humanoid") then
+                    local pos = CC:WorldToViewportPoint(v.Character.PrimaryPart.Position)
+                    local magnitude =
+                    (Vector2.new(pos.X, pos.Y) - Vector2.new(Mouse.X, Mouse.Y)).magnitude
+                    if (Vector2.new(pos.X, pos.Y) - Vector2.new(Mouse.X, Mouse.Y)).magnitude < shortestDistance then
+                        closestPlayer = v
+                        shortestDistance = magnitude
+                    end
+                end
+            end)
+        end
+    end)()
+    return closestPlayer
+end
+
+local function IsOnScreen(Object)
+    local IsOnScreen = ws.CurrentCamera:WorldToScreenPoint(Object.Position)
+    return IsOnScreen
+end
+
+local function Filter(Object)
+    if string.find(Object.Name, "Gun") then
+        return
+    end
+    if Object:IsA("Part") or Object:IsA("MeshPart") then
+        return true
+    end
+end
+
+local function WTSPos(Position)
+    local ObjectVector = ws.CurrentCamera:WorldToScreenPoint(Position)
+    return Vector2.new(ObjectVector.X, ObjectVector.Y)
+end
+
+local function WTS(Object)
+    local ObjectVector = ws.CurrentCamera:WorldToScreenPoint(Object.Position)
+    return Vector2.new(ObjectVector.X, ObjectVector.Y)
+end
+
+function GetNearestPartToCursorOnCharacter(character)
+    local ClosestDistance = math.huge
+    local BodyPart = nil
+
+    if (character and character:GetChildren()) then
+        for k,  x in next, character:GetChildren() do
+            if Filter(x) and IsOnScreen(x) then
+                local Distance = (WTS(x) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
+    
+                if Distance < ClosestDistance then
+                    ClosestDistance = Distance
+                    BodyPart = x
+                end
+            end
+        end
+    end
+
+    return BodyPart
+end
+LPH_JIT_MAX(function()
+    game.RunService.Heartbeat:Connect(function()
+        if getgenv().Settings.Enabled == true and Plr ~= nil then
+            local Main = CFrame.new(CC.CFrame.p,Plr.Character[getgenv().Settings.Part].Position + Plr.Character[getgenv().Settings.Part].Velocity / getgenv().Settings.Pred)
+            CC.CFrame = CC.CFrame:Lerp(Main, getgenv().Settings.Smoothness, Enum.EasingStyle.Elastic, Enum.EasingDirection.InOut,Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+        end
+    end)
+end)()
+
+LPH_JIT_MAX(function()
+    task.spawn(function()
+        while task.wait() do
+            if getgenv().Settings.Enabled and Plr ~= nil and (Plr.Character) then
+                getgenv().Settings.Part = tostring(GetNearestPartToCursorOnCharacter(Plr.Character))
+            end
+        end
+    end)
+end)()
